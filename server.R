@@ -1,7 +1,9 @@
 shinyServer(
   function(input, output) {
 
-    # Pg Tab1
+   ### PAGE 1 TAB 1
+
+
     key_data1 <- reactive({
       sample_data[sample_data$date >= input$selected_drange[1] &  sample_data$date <= input$selected_drange[2] , 1]
     })
@@ -10,7 +12,6 @@ shinyServer(
     sample_data1 <- reactive({
       sample_data[ sample_data$date >= input$selected_drange[1] &  sample_data$date <= input$selected_drange[2] , input$selected_cols ]
     })
-
 
 
     output$heat <- renderPlotly({
@@ -42,7 +43,6 @@ shinyServer(
     })
 
 
-
     output$scatterplot <- renderPlotly({
           s <- event_data("plotly_click", source = "CORR_MATRIX")
 
@@ -68,7 +68,11 @@ shinyServer(
     })
 
 
-    # Pg1 Tab 2
+
+
+
+
+    #### PAGE 1 TAB 2
 
     output$col <- renderUI({
       df <- sample_data1()
@@ -101,13 +105,93 @@ shinyServer(
     })
 
 
-    # Pg1 Tab3
+
+
+
+
+    ### PAGE 1 TAB 3
+
+
 
     output$cluster_data <- renderDataTable({
       Date <- key_data1()
       as.data.frame(cbind(Date, sample_data1()))
       },options = list(pageLength = 10, scrollX=TRUE)
       )
+
+
+
+
+
+    ### PAGE 2 TAB 1
+
+
+    clust_result <- reactive({
+      input$do_cluster
+      withProgress(message = 'Clustering In Progress ...', value = 5, {
+        if(input$do_cluster == 0){
+          return()
+
+        } else {
+          isolate({
+            incProgress(amount = 0.1, message = NULL, detail = NULL, session = getDefaultReactiveDomain())
+            x <- standardizeData(sample_data1())
+            d <- dist(x, method = as.character(input$dist_method))
+            clust_result <- hclust(d,method = as.character(input$clustering_method))
+            clust_result
+          })
+
+        }
+      })
+    })
+
+    output$scree_plot <- renderHighchart({
+      input$do_scree
+      input$do_cluster
+      if(input$do_scree == 0 | input$do_cluster == 0){
+        return()
+      } else{isolate({
+        plt <- updateScreePlot(start = input$cluster_start, end = input$cluster_end, cl = clust_result(), data = sample_data1())
+        plt
+
+      })
+      }
+    })
+
+
+
+    memberSet <- reactive({
+      memberSet <- clusterMembers(clust_result(),sample_data1(),tree_num = input$hist_tree)
+      as.data.frame(memberSet)
+    })
+
+
+
+    output$hist_plot <- renderHighchart({
+      input$do_histogram
+      if(input$do_histogram==0){
+        return()
+      }else{isolate({
+        histo <- updateHistogram(memberSet(), "% of Occupants")
+        histo
+      })
+      }
+
+    })
+
+
+
+
+
+    ### PAGE 3 TAB 1
+
+    output$cSel <- renderUI({
+      selectInput(inputId = "select_radar_clus", label = "Select Clusters to Display:"
+                  , choices = 1:input$hist_tree, multiple = T, selected = 1:input$hist_tree)
+    })
+
+
+
 
     # # REACTIVE OBJECTS
     # cutoff_val <- reactive({
@@ -197,31 +281,8 @@ shinyServer(
     #
     #
     #
-    # clust_result <- reactive({
-    #   input$do_cluster
-    #   withProgress(message = 'Clustering In Progress ...', value = 5, {
-    #     if(input$do_cluster == 0){
-    #       return()
-    #
-    #     } else {
-    #       isolate({
-    #         incProgress(amount = 0.1, message = NULL, detail = NULL,
-    #                     session = getDefaultReactiveDomain())
-    #         x <- standardizeData(c2dc_trimmed5()[,-2])
-    #         d <- dist(x, method = as.character(input$dist_method))
-    #         clust_result <- hclust(d,method = as.character(input$clustering_method))
-    #         clust_result
-    #       })
-    #
-    #     }
-    #   })
-    # })
     #
     #
-    # memberSet <- reactive({
-    #   memberSet <- clusterMembers(clust_result(),c2dc_trimmed5()[,-2],tree_num = input$hist_tree)
-    #   as.data.frame(memberSet)
-    # })
     #
     #
     # means <- reactive({
@@ -426,38 +487,11 @@ shinyServer(
     #     selectInput(inputId = "selected_col_names",label = "Choose Numeric features",choices = names(sample_data),multiple = TRUE)
     # })
 
-    # output$scree_plot <- renderHighchart({
-    #   input$do_scree
-    #   input$do_cluster
-    #   if(input$do_scree == 0 | input$do_cluster == 0){
-    #     return()
-    #   } else{isolate({
-    #     plt <- updateScreePlot(start = input$cluster_start,end = input$cluster_end,cl = clust_result(),data = c2dc_trimmed5()[,-c(1,2)])
-    #     plt
-    #
-    #   })
-    #   }
-    # })
     #
     #
     #
-    # output$hist_plot <- renderHighchart({
-    #   input$do_histogram
-    #   if(input$do_histogram==0){
-    #     return()
-    #   }else{isolate({
-    #     histo <- updateHistogram(memberSet(), "% of Records")
-    #     histo
-    #   })
-    #   }
-    #
-    # })
     #
     #
-    # output$cSel <- renderUI({
-    #   selectInput(inputId = "select_radar_clus",label = "Select Clusters to Display:",
-    #               choices = 1:input$hist_tree,multiple = T,selected =1:input$hist_tree)
-    # })
     #
     #
     # output$radar_plot <- renderHighchart({
