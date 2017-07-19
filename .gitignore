@@ -1,0 +1,14 @@
+.DS_Store
+.Rapp.history
+.Rhistory
+shiny_template_example.R
+.Rproj.user
+Product Location Master.csv
+.RData
+rsconnect/
+DC2S Data/
+*.docx
+*.xlsx
+datatraining.txt
+
+
