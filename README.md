@@ -6,6 +6,8 @@ these clusters and for new data of the *same format* to be uploaded and predicte
 profiled clusters.
 
 
+![Clustering App](Unsupervised-Machine-Learning-with-Flexdashboard/Screen Shot 2017-07-19 at 6.02.27 PM.png)
+
 Please Note that you would need the following on you machine:
 *R version 3.3.3*
 
