@@ -1,4 +1,4 @@
-# Unsupervised-Machine-Learning-with-Flexdashboard
+# Unsupervised-Machine-Learning-with-RShiny
 This is an End to End clustering application implemented primarily in R and to a lesser extent javascript (for viz)
 
 Not only do I walk you through a distance based clustering application, the app will allow for catagorization of  
@@ -6,7 +6,7 @@ these clusters and for new data of the *same format* to be uploaded and predicte
 profiled clusters.
 
 
-![Cluster Visualization](clus_viz)
+![Cluster Visualization](clus_viz.png)
 
 
 Please Note that you would need the following on you machine:
