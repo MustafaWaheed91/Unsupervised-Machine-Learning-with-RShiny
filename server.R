@@ -179,7 +179,9 @@ shinyServer(
 
     })
 
-
+    output$t1t1 <- renderDataTable({
+      sjk <<- memberSet()
+    })
 
 
 
@@ -189,8 +191,6 @@ shinyServer(
       selectInput(inputId = "select_radar_clus", label = "Select Clusters to Display:"
                   , choices = 1:input$hist_tree, multiple = T, selected = 1:input$hist_tree)
     })
-
-
 
 
     # # REACTIVE OBJECTS

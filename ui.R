@@ -63,9 +63,11 @@ shinyUI(
                                 ,h3("Cluster Selection", align = "center")
                                 ,hr()
                                 ,fluidRow(
-                                  splitLayout(cellWidths = c("50%", "50%"),highchartOutput("scree_plot"),highchartOutput("hist_plot"))
+                                  splitLayout(cellWidths = c("50%", "50%"),highchartOutput("scree_plot"),highchartOutput("hist_plot"),
+                                              dataTableOutput("t1t1")
+                                              )
+                                  )
                                 )
-                        )
                        )
                      )
                    )
