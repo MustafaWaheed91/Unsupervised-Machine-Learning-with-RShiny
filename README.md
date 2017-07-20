@@ -6,7 +6,8 @@ these clusters and for new data of the *same format* to be uploaded and predicte
 profiled clusters.
 
 
-![Clustering App)[clus_viz.png]
+![Cluster Visualization](clus_viz)
+
 
 Please Note that you would need the following on you machine:
 *R version 3.3.3*
