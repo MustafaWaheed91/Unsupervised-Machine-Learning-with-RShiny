@@ -3,16 +3,13 @@ shinyServer(
 
    ### PAGE 1 TAB 1
 
-
     key_data1 <- reactive({
       sample_data[sample_data$date >= input$selected_drange[1] &  sample_data$date <= input$selected_drange[2] , 1]
     })
 
-
     sample_data1 <- reactive({
       sample_data[ sample_data$date >= input$selected_drange[1] &  sample_data$date <= input$selected_drange[2] , input$selected_cols ]
     })
-
 
     output$heat <- renderPlotly({
       input$do_corr
@@ -42,37 +39,35 @@ shinyServer(
 
     })
 
-
     output$scatterplot <- renderPlotly({
-          s <- event_data("plotly_click", source = "CORR_MATRIX")
+        s <- event_data("plotly_click", source = "CORR_MATRIX")
 
-          if (length(s)) {
-            vars <- c(s[["x"]], s[["y"]])
-            ################ This is the only place I need to add data
-            df1 <- sample_data1()
-            df1 <- df1[,order(colnames(df1))]
-            d <- setNames(df1[vars], c("x", "y"))
-            #########################################################
-            yhat <- fitted(lm(y ~ x, data = d))
-            plot_ly(d, x = ~ x) %>%
-              add_markers(y = ~ y) %>%
-              add_lines(y = ~ yhat) %>%
-              layout(xaxis = list(title = s[["x"]]),
-                     yaxis = list(title = s[["y"]]),
-                     showlegend = FALSE)
+        if (length(s)) {
+          vars <- c(s[["x"]], s[["y"]])
+          ################ This is the only place I need to add data
+          df1 <- sample_data1()
+          df1 <- df1[,order(colnames(df1))]
+          d <- setNames(df1[vars], c("x", "y"))
+          #########################################################
+          yhat <- fitted(lm(y ~ x, data = d))
+          plot_ly(d, x = ~ x) %>%
+            add_markers(y = ~ y) %>%
+            add_lines(y = ~ yhat) %>%
+            layout(xaxis = list(title = s[["x"]]),
+                   yaxis = list(title = s[["y"]]),
+                   showlegend = FALSE)
 
-          } else {
-            plotly_empty()
-          }
+        } else {
+          plotly_empty()
+        }
 
     })
 
 
 
 
-
-
     #### PAGE 1 TAB 2
+
 
     output$col <- renderUI({
       df <- sample_data1()
@@ -80,8 +75,6 @@ shinyServer(
       selectInput(inputId = "feature_col",label = "Choose features to Check Distribution"
                   ,choices = nm, multiple = F)
     })
-
-
 
 
     output$dist_plot <- renderPlotly({
@@ -111,8 +104,6 @@ shinyServer(
 
     ### PAGE 1 TAB 3
 
-
-
     output$cluster_data <- renderDataTable({
       Date <- key_data1()
       as.data.frame(cbind(Date, sample_data1()))
@@ -123,74 +114,149 @@ shinyServer(
 
 
 
+
+
+
     ### PAGE 2 TAB 1
 
 
     clust_result <- reactive({
       input$do_cluster
-      withProgress(message = 'Clustering In Progress ...', value = 5, {
-        if(input$do_cluster == 0){
-          return()
-
+      if(input$do_cluster == 0){
+        return()
         } else {
-          isolate({
-            incProgress(amount = 0.1, message = NULL, detail = NULL, session = getDefaultReactiveDomain())
-            x <- standardizeData(sample_data1())
-            d <- dist(x, method = as.character(input$dist_method))
-            clust_result <- hclust(d,method = as.character(input$clustering_method))
-            clust_result
-          })
+        isolate({
+          x <- standardizeData(sample_data1())
+          d <- dist(x, method = as.character(input$dist_method))
+          Sys.sleep(1)
+          clust_result <- hclust(d,method = as.character(input$clustering_method))
+          clust_result
+        })
 
-        }
-      })
+      }
     })
 
     output$scree_plot <- renderHighchart({
       input$do_scree
-      input$do_cluster
+      withProgress(message = 'Plotting In Progress ...', value = 5, {
       if(input$do_scree == 0 | input$do_cluster == 0){
         return()
-      } else{isolate({
-        plt <- updateScreePlot(start = input$cluster_start, end = input$cluster_end, cl = clust_result(), data = sample_data1())
-        plt
-
-      })
+      }else{
+        isolate({
+          incProgress(amount = 0.1, message = NULL, detail = NULL, session = getDefaultReactiveDomain())
+          plt <- updateScreePlot(start = input$cluster_start, end = input$cluster_end, cl = clust_result(), data = sample_data1())
+          plt
+        })
       }
+      })
     })
-
-
 
     memberSet <- reactive({
       memberSet <- clusterMembers(clust_result(),sample_data1(),tree_num = input$hist_tree)
       as.data.frame(memberSet)
     })
 
-
-
     output$hist_plot <- renderHighchart({
       input$do_histogram
       if(input$do_histogram==0){
         return()
       }else{isolate({
-        histo <- updateHistogram(memberSet(), "% of Occupants")
+        histo <- updateHistogram(memberSet(), "% of Records")
         histo
       })
       }
 
     })
 
-    output$t1t1 <- renderDataTable({
-      sjk <<- memberSet()
-    })
-
 
 
     ### PAGE 3 TAB 1
+
 
     output$cSel <- renderUI({
       selectInput(inputId = "select_radar_clus", label = "Select Clusters to Display:"
                   , choices = 1:input$hist_tree, multiple = T, selected = 1:input$hist_tree)
     })
+
+    tabMembers <- reactive({
+      kk <- memberSet()
+      kk$order_date <- key_data1()
+      return(kk)
+    })
+
+    output$stacked_plot <- renderHighchart({
+      updateStacked(tabMembers(),input$select_radar_clus)
+    })
+
+    means <- reactive({
+      means <- clusterMeans(hc.c = clust_result(),c2dc_trimmed2 = sample_data1(),tree_num = input$hist_tree)$org_means
+      as.data.frame(means)
+    })
+
+    norm_means <- reactive({
+      l <- means()[,-1]
+      ll <- apply(l,2,normalize.vector)
+      Group.1 <- means()[,1]
+      out <- cbind(Group.1,as.data.frame(ll))
+      as.data.frame(out)
+    })
+
+    output$radar_plot <- renderHighchart({
+      input$do_cluster
+      if(input$do_cluster == 0){
+        return()
+      } else {
+        chrt <- updateRadarChart(norm_means()[norm_means()$Group.1 %in% input$select_radar_clus,])
+        chrt
+      }
+    })
+
+    output$hist_plot_scam <- renderHighchart({
+      input$do_histogram
+      if(input$do_histogram==0){
+        return()
+      }else{isolate({
+        histo <- updateHistogram(memberSet(), "% of Records")
+        histo
+      })
+      }
+
+    })
+
+    output$hidden_hist <- renderUI({
+      input$show_hist
+      if(input$show_hist == TRUE ){
+        return(fluidRow(splitLayout(cellWidths = c("50%","50%"),highchartOutput("radar_plot"),highchartOutput("hist_plot_scam"))))
+      }else{
+        return(fluidRow(splitLayout(cellWidths = c("100%"),highchartOutput("radar_plot"))))
+      }
+    })
+
+
+
+
+
+    ### PAGE 3 TAB 2
+
+    output$parcoor <- renderParcoords({
+      df <- memberSet()
+      df <- df[ df$`member.c` %in% input$select_radar_clus,]
+      df <- df[,-c(2,2)]
+      plt <- parcoords(df
+                       , rownames = F # turn off rownames from the data.frame
+                       , brushMode = "2D-strums"
+                       , reorderable = T
+                       , queue = T
+                       , color = list(
+                         colorBy = "member.c"
+                         ,colorScale = htmlwidgets::JS("d3.scale.category10()")
+                       )
+      )
+
+    })
+
+
+
 
 
     # # REACTIVE OBJECTS
@@ -285,19 +351,8 @@ shinyServer(
     #
     #
     #
-    # means <- reactive({
-    #   means <- clusterMeans(hc.c = clust_result(),c2dc_trimmed2 = c2dc_trimmed5()[,-2],tree_num = input$hist_tree)$org_means
-    #   as.data.frame(means)
-    # })
     #
     #
-    # norm_means <- reactive({
-    #   l <- means()[,-1]
-    #   ll <- apply(l,2,normalize.vector)
-    #   Group.1 <- means()[,1]
-    #   out <- cbind(Group.1,as.data.frame(ll))
-    #   as.data.frame(out)
-    # })
     #
     #
     #
@@ -409,10 +464,7 @@ shinyServer(
     # })
     #
     #
-    # tabMembers <- reactive({
-    #   tabOut <- prepTab(memberSet(),cutoff_val())
-    #   as.data.frame(tabOut)
-    # })
+
     #
     #
     #
@@ -486,23 +538,12 @@ shinyServer(
     # output$col_names <- renderUI({
     #     selectInput(inputId = "selected_col_names",label = "Choose Numeric features",choices = names(sample_data),multiple = TRUE)
     # })
-
     #
     #
     #
     #
     #
     #
-    #
-    # output$radar_plot <- renderHighchart({
-    #   input$do_cluster
-    #   if(input$do_cluster == 0){
-    #     return()
-    #   } else {
-    #     chrt <- updateRadarChart(norm_means()[norm_means()$Group.1 %in% input$select_radar_clus,])
-    #     chrt
-    #   }
-    # })
     #
     #
     #
@@ -548,22 +589,22 @@ shinyServer(
     #
     # # #Important DO NOT DELETE
     # #
-    # # output$parcoor <- renderParcoords({
-    # #   df <- memberSet()
-    # #   df <- df[ df$`member.c` %in% input$select_radar_clus,]
-    # #   df <- df[,-c(2,2)]
-    # #   plt <- parcoords(df
-    # #                    ,rownames = F # turn off rownames from the data.frame
-    # #                    , brushMode = "2D-strums"
-    # #                    , reorderable = T
-    # #                    , queue = T
-    # #                    , color = list(
-    # #                      colorBy = "member.c"
-    # #                      ,colorScale = htmlwidgets::JS("d3.scale.category10()")
-    # #                    )
-    # #   )
-    # #
-    # # })
+    # output$parcoor <- renderParcoords({
+    #   df <- memberSet()
+    #   df <- df[ df$`member.c` %in% input$select_radar_clus,]
+    #   df <- df[,-c(2,2)]
+    #   plt <- parcoords(df
+    #                    ,rownames = F # turn off rownames from the data.frame
+    #                    , brushMode = "2D-strums"
+    #                    , reorderable = T
+    #                    , queue = T
+    #                    , color = list(
+    #                      colorBy = "member.c"
+    #                      ,colorScale = htmlwidgets::JS("d3.scale.category10()")
+    #                    )
+    #   )
+    #
+    # })
     #
     #
     # output$train_data <- renderUI({
@@ -627,30 +668,11 @@ shinyServer(
     #
     #
     #
-    # output$hist_plot_scam <- renderHighchart({
-    #   input$do_histogram
-    #   if(input$do_histogram==0){
-    #     return()
-    #   }else{isolate({
-    #     histo <- updateHistogram(memberSet(), "% of Records")
-    #     histo
-    #   })
-    #   }
-    #
-    # })
     #
     #
-    # output$hidden_hist <- renderUI({
-    #   input$show_hist
-    #   if(input$show_hist == TRUE ){
-    #     return(fluidRow(splitLayout(cellWidths = c("50%","50%"),highchartOutput("radar_plot"),highchartOutput("hist_plot_scam"))))
-    #   }else{
-    #     return(fluidRow(splitLayout(cellWidths = c("100%"),highchartOutput("radar_plot"))))
-    #   }
-    # })
     #
     #
-    # output$stacked_plot <- renderHighchart(updateStacked(tabMembers(),data_name = input$select_data,season = input$select_season))
+
     #
     # output$looped_input  <-  renderUI({
     #   if(input$show_rename == TRUE){

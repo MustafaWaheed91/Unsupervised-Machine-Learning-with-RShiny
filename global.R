@@ -133,19 +133,17 @@ updateHistogram <- function(memberSet, yLb){
     hc_chart(type = "column") %>%
     # hc_title(text = "Cluster Distribution") %>%
     hc_xAxis(title = list(text = "Cluster"),categories = cat) %>%
-    hc_yAxis(title = list(text = yLb)) %>%
+    hc_yAxis(title = list(text = yLb), gridLineWidth = 0) %>%
     hc_tooltip(formatter = JS("function(){return ('% of Records: ' + this.y + '%' + ' <br> Cluster: ' + this.x)}")) %>%
     hc_add_series(data =dat,name = "Cluster Distribution")
 }
 # ########################################################################################
-# clusterMeans<- function(c2dc_trimmed2,hc.c,tree_num){
-#   # Calculate Cluster Means
-#   member.c <- cutree(hc.c,tree_num)
-#   z <- standardizeData(c2dc_trimmed2)
-#   normal_cluster_means <- aggregate(z,list(member.c),mean)
-#   cluster_means <- aggregate(c2dc_trimmed2[,-c(1,1)],list(member.c),mean)
-#   return(list(org_means = cluster_means,  norm_means = normal_cluster_means ))
-# }
+clusterMeans<- function(c2dc_trimmed2,hc.c,tree_num){
+  member.c <- cutree(hc.c,tree_num)
+  normal_cluster_means <- aggregate(standardizeData(c2dc_trimmed2),list(member.c),mean)
+  cluster_means <- aggregate(c2dc_trimmed2,list(member.c),mean)
+  return(list(org_means = cluster_means,  norm_means = normal_cluster_means ))
+}
 # #######################################################################################
 # standMeans <- function(x){
 #   normalized = (x-min(x))/(max(x)-min(x))
@@ -170,31 +168,31 @@ updateHistogram <- function(memberSet, yLb){
 # #   legend(x=2, y=1, legend = rownames(data), bty = "n", pch=20 , col=colors_border , text.col = "grey", cex=1.2, pt.cex=3)
 # #
 # # }
-# ########################################################################################
-# updateRadarChart <- function(dataset,statement1,statement2){
-#   rownames(dataset) <- as.character(dataset$Group.1)
-#   dataset <- dataset[,-c(1,1)]
-#   seter <- rownames(dataset)
-#   catagories <- colnames(dataset)
-#   graph_data <- lapply(seter, function(city) {
-#     list(name = paste(city)
-#          ,data = as.numeric(dataset[city,])
-#          ,pointPlacement = 'on')
-#   })
-#
-#   plt <- highchart() %>%
-#     hc_colors(co) %>%
-#     hc_chart(polar = TRUE, type = "line") %>%
-#     # hc_title(text = statement1) %>%
-#     # hc_subtitle(text = statement2) %>%
-#     hc_xAxis(categories = catagories,
-#              tickmarkPlacement = 'on',
-#              lineWidth = 1.5) %>%
-#     hc_yAxis(gridLineInterpolation = 'polygon',lineWidth = 2,min = min(dataset), max =max(dataset), tickInterval=0.5) %>%
-#     hc_add_series_list(graph_data)
-#   return(plt)
-# }
-# ########################################################################################
+########################################################################################
+updateRadarChart <- function(dataset){
+  rownames(dataset) <- as.character(dataset$Group.1)
+  dataset <- dataset[,-c(1,1)]
+  seter <- rownames(dataset)
+  catagories <- colnames(dataset)
+  graph_data <- lapply(seter, function(city) {
+    list(name = paste(city)
+         ,data = as.numeric(dataset[city,])
+         ,pointPlacement = 'on')
+  })
+
+  plt <- highchart() %>%
+    hc_colors(co) %>%
+    hc_chart(polar = TRUE, type = "line") %>%
+    # hc_title(text = statement1) %>%
+    # hc_subtitle(text = statement2) %>%
+    hc_xAxis(categories = catagories,
+             tickmarkPlacement = 'on',
+             lineWidth = 1.5) %>%
+    hc_yAxis(gridLineInterpolation = 'polygon',lineWidth = 2,min = min(dataset), max =max(dataset), tickInterval=0.5) %>%
+    hc_add_series_list(graph_data)
+  return(plt)
+}
+########################################################################################
 # #function to plot Parallel Coordinates Plot.
 # # createParPlot <- function(memberSet){
 # #   par(las = 1, mar = c(4.5,3,3,2)+0.1,cex = 0.8)
@@ -220,7 +218,7 @@ updateScreePlot <- function(start,end,cl,data){
     hc_colors(cco) %>%
     # hc_title(text = "Scree Plot") %>%
     hc_xAxis(title = list(text = "Number of Clusters"),crosshairs = TRUE) %>%
-    hc_yAxis(title = list(text = "ERROR"),labels = list(enabled = F)) %>%
+    hc_yAxis(title = list(text = "ERROR"),labels = list(enabled = F), gridLineWidth = 0) %>%
     hc_add_series(name ="Within-Cluster Sum of Squares" ,data = round(normalize.vector(res),2)) %>%
     hc_tooltip(formatter = JS("function(){return ('Normalized Error: ' + this.y + ' <br> Number of Clusters: ' + this.x)}"))
   return(hc)
@@ -261,70 +259,50 @@ updateScreePlot <- function(start,end,cl,data){
 #   return(list(org_means = cluster_means, norm_means = normal_cluster_means))
 # }
 # #########################################################################################
-# prepTab <- function(memberSet,cutoff_val){
+# prepTab <- function(memberSet, key_date){
+#
 #   kk <- memberSet
-#   kkk <- str_split_fixed(kk$dummyKey, "_", as.numeric(cutoff_val))
-#   kkk <- as.data.frame(kkk)
-#   if(as.numeric(cutoff_val) == 12){
-#     colnames(kkk) <- c("order_header_key","order_line_key","order_no","country","trckgnbr","extn_style_number","extn_color_number","extn_size_description",
-#                        "order_date","order_hour","EDD.date","Customer.date")
-#     kk$dummyKey <- NULL
-#     tabOut <- cbind(kkk,kk)
-#     tabOut$order_date <- as.Date(tabOut$order_date)
-#     return(tabOut)
+#   kk$order_date <- key_date
+#   tabOut <- cbind(kkk,kk)
+#   return(tabOut)
 #   }
-#   if(as.numeric(cutoff_val) == 16){
-#     colnames(kkk) <- c("order_header_key","order_line_key","enterprise_key","order_no","extn_style_number","extn_color_number","extn_size_description","contract","trckgnbr","customer_zip_code",
-#                        "SHPGMTHDDESC","dc","dc_drop_date","TS_SHIP","OrigScan","EDD.date")
-#     kk$dummyKey <- NULL
-#     tabOut <- cbind(kkk,kk)
-#     tabOut$dc_drop_date <- as.Date(tabOut$dc_drop_date)
-#     colnames(tabOut)[grep("dc_drop_date",names(tabOut))] <- "order_date"
-#     return(tabOut)
-#   }
-#
-# }
+
 # #########################################################################################
-# updateStacked <- function(prepTab_output,data_name,season) {
-#   # prepTab_output$order_date <- as.Date(prepTab_output$order_date)
-#   df <- prepTab_output[,c("order_date","member.c","trckgnbr","order_header_key","order_line_key")]
-#   # weekdays1 <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday')
-#   # df$wDay <- factor((weekdays(df$order_date) %in% weekdays1),
-#   #                   levels=c(FALSE, TRUE), labels=c('wkend', 'wkday'))
-#
-#   df$wDay <- factor(substr(weekdays(df$order_date),1,3))
-#
-#   df$order_date <- paste(as.character(df$order_date),as.character(df$wDay))
-#   df$wDay <- NULL
-#   dt <- data.table(df)
-#   dt1 <- dt[, order_count := .N,by = c("order_date","member.c")]
-#   dt2 <- dt1[,list(order_date,member.c,order_count)]
-#   dt3 <- dcast(dt2,order_date ~ member.c, value.var = 'order_count')
-#   rownames(dt3) <- as.character(dt3$order_date)
-#   dt3 <- dt3[,-c(1,1)]
-#   seter <- as.factor(rownames(dt3))
-#   ds <- lapply(colnames(dt3), function(x){
-#     list(data = dt3[,x], name = x ,pointPlacement = 'on')
-#   })
-#
-#   plt <- highchart() %>%
-#     hc_colors(co) %>%
-#     hc_chart(type = "column") %>%
-#     # hc_title(text = paste(as.character(data_name),"EDD Failures", as.character(season))) %>%
-#     hc_yAxis(title = list(text = "# of Records")) %>%
-#     hc_xAxis(categories = seter,
-#              tickmarkPlacement = 'on',
-#              lineWidth = 1,
-#              label = list(align = "left")) %>%
-#     hc_plotOptions(column = list(
-#       dataLabels = list(enabled = FALSE),
-#       stacking = "normal",
-#       enableMouseTracking = TRUE)
-#     ) %>%
-#     hc_add_series_list(ds)
-#
-#   return(plt)
-# }
+
+updateStacked <- function(tabMembers, radar_clusters) {
+  df <- tabMembers[tabMembers$member.c %in% radar_clusters,]
+  df$wDay <- factor(substr(weekdays(df$order_date),1,3))
+  df$order_date <- paste(as.character(df$order_date),as.character(df$wDay))
+  df$wDay <- NULL
+
+  dt <- data.table(df)
+  dt1 <- dt[, order_count := .N,by = c("order_date","member.c")]
+  dt2 <- dt1[,list(order_date,member.c,order_count)]
+  dt3 <- dcast(dt2,order_date ~ member.c, value.var = 'order_count')
+  rownames(dt3) <- as.character(dt3$order_date)
+  dt3 <- dt3[,-c(1,1)]
+  seter <- as.factor(rownames(dt3))
+  ds <- lapply(colnames(dt3), function(x){
+    list(data = dt3[,x], name = x ,pointPlacement = 'on')
+  })
+  plt <- highchart() %>%
+    hc_colors(co) %>%
+    hc_chart(type = "column") %>%
+    # hc_title(text = paste(as.character(data_name),"EDD Failures", as.character(season))) %>%
+    hc_yAxis(title = list(text = "# of Records")) %>%
+    hc_xAxis(categories = seter,
+             tickmarkPlacement = 'on',
+             lineWidth = 1,
+             label = list(align = "left")) %>%
+    hc_plotOptions(column = list(
+      dataLabels = list(enabled = FALSE),
+      stacking = "normal",
+      enableMouseTracking = TRUE)
+    ) %>%
+    hc_add_series_list(ds)
+
+  return(plt)
+}
 # #########################################################################################
 # updateStacked2 <- function(prepTab_output,clusNames,data_name) {
 #   # prepTab_output$order_date <- as.Date(prepTab_output$order_date)

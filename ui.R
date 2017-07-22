@@ -1,5 +1,5 @@
 shinyUI(
-  navbarPage("Unsupervised Machine Learning App"
+  navbarPage("Unsupervised Machine Learning"
     ,collapsable = TRUE
     ,tabPanel("Feature Investigation"
             ,fluidPage(
@@ -18,7 +18,7 @@ shinyUI(
                        ,min = min(sample_data$date), max =  max(sample_data$date)
                       )
                      ,hr()
-                     ,actionButton(inputId = "do_corr", label = "Update Correlation Plot")
+                     ,actionButton(inputId = "do_corr", label = "Update Scatter Plot")
                     )
                   ,conditionalPanel(
                     condition = "input.tab_selected2 == 20"
@@ -32,7 +32,8 @@ shinyUI(
                     tabPanel("Check Correlation", value = 10, plotlyOutput("heat"), hr(), plotlyOutput("scatterplot"))
                    ,tabPanel("Check Distributions", value = 20, plotlyOutput("dist_plot"))
                    ,tabPanel("View Data", value = 30, dataTableOutput("cluster_data"))
-                   ,id = "tab_selected2")
+                   ,id = "tab_selected2"
+                  )
                 )
               )
           )
@@ -44,6 +45,12 @@ shinyUI(
                  ,theme = shinytheme("flatly")
                  ,sidebarLayout(
                    sidebarPanel(
+                     HTML('<script type="text/javascript">
+                          $(document).ready(function() {
+                          $("#do_cluster").click(function() {
+                          $("#Download").text("Running Clustering...");});});
+                          </script>'
+                          ),
                      selectInput(inputId = "clustering_method", label = "Select Hierarchical Clustering method",choices = c("complete","average","ward.D"),selected = "average")
                      ,selectInput(inputId = "dist_method",label = "Choose the Type of Distance Calculation" ,choices = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean")
                      ,actionButton(inputId = "do_cluster",label = "Cluster")
@@ -62,21 +69,21 @@ shinyUI(
                        tabPanel("Occupancy Clustering"
                                 ,h3("Cluster Selection", align = "center")
                                 ,hr()
-                                ,fluidRow(
-                                  splitLayout(cellWidths = c("50%", "50%"),highchartOutput("scree_plot"),highchartOutput("hist_plot"),
-                                              dataTableOutput("t1t1")
+                                ,splitLayout(cellWidths = c("50%", "50%")
+                                              ,highchartOutput("scree_plot", height = 500)
+                                              ,highchartOutput("hist_plot", height = 500)
                                               )
-                                  )
                                 )
                        )
                      )
                    )
                  )
-               )
+              )
       ,tabPanel("Clustering Results"
-               ,fluidPage(theme = shinytheme("flatly"), sidebarLayout(
-                 sidebarPanel(
-                   conditionalPanel(condition = "input.tab_selected == 1"
+               ,fluidPage(theme = shinytheme("flatly")
+                          ,sidebarLayout(
+                            sidebarPanel(
+                              conditionalPanel(condition = "input.tab_selected == 1"
                                     ,uiOutput("cSel")
                                     ,checkboxInput(inputId = "show_hist",label = "Show Distribution of Clusters",value = FALSE )
                                     ,br()
@@ -86,8 +93,8 @@ shinyUI(
                                     ,downloadButton(outputId ="download_means" ,label = "Download Cluster Averages CSV  ")
                                     ,hr()
                                     ,downloadButton(outputId ="download_members" ,label = "Download Cluster Members CSV")
-                   )
-                   ,conditionalPanel(condition = "input.tab_selected == 3"
+                                    )
+                              ,conditionalPanel(condition = "input.tab_selected == 3"
                                      ,h4(strong("Root Cause Clusters were defined on:"))
                                      ,uiOutput("train_data")
                                      ,uiOutput("train_features")
@@ -102,8 +109,8 @@ shinyUI(
                                      ,checkboxInput(inputId = "add_plot",label ="Show Additional Plots", value = FALSE)
                                      ,hr()
                                      ,downloadButton(outputId ="download_ass" ,label = "Download New Cluster Assignments CSV")
-                   )
-                 )
+                                    )
+                              )
                  ,mainPanel(
                    tabsetPanel(
                      tabPanel("Cluster Profiling", value = 1
@@ -127,6 +134,5 @@ shinyUI(
             )
       )
     )
-
   )
 )
