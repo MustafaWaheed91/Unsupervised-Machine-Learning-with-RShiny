@@ -18,7 +18,7 @@ shinyUI(
                        ,min = min(sample_data$date), max =  max(sample_data$date)
                       )
                      ,hr()
-                     ,actionButton(inputId = "do_corr", label = "Update Scatter Plot")
+                     ,actionButton(inputId = "do_corr", label = "Update Correlation Plot")
                     )
                   ,conditionalPanel(
                     condition = "input.tab_selected2 == 20"
@@ -45,12 +45,6 @@ shinyUI(
                  ,theme = shinytheme("flatly")
                  ,sidebarLayout(
                    sidebarPanel(
-                     HTML('<script type="text/javascript">
-                          $(document).ready(function() {
-                          $("#do_cluster").click(function() {
-                          $("#Download").text("Running Clustering...");});});
-                          </script>'
-                          ),
                      selectInput(inputId = "clustering_method", label = "Select Hierarchical Clustering method",choices = c("complete","average","ward.D"),selected = "average")
                      ,selectInput(inputId = "dist_method",label = "Choose the Type of Distance Calculation" ,choices = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean")
                      ,actionButton(inputId = "do_cluster",label = "Cluster")
@@ -83,7 +77,7 @@ shinyUI(
                ,fluidPage(theme = shinytheme("flatly")
                           ,sidebarLayout(
                             sidebarPanel(
-                              conditionalPanel(condition = "input.tab_selected == 1"
+                              conditionalPanel(condition = "input.tab_selected == 1 || input.tab_selected == 2 || input.tab_selected == 3"
                                     ,uiOutput("cSel")
                                     ,checkboxInput(inputId = "show_hist",label = "Show Distribution of Clusters",value = FALSE )
                                     ,br()
@@ -94,38 +88,21 @@ shinyUI(
                                     ,hr()
                                     ,downloadButton(outputId ="download_members" ,label = "Download Cluster Members CSV")
                                     )
-                              ,conditionalPanel(condition = "input.tab_selected == 3"
-                                     ,h4(strong("Root Cause Clusters were defined on:"))
-                                     ,uiOutput("train_data")
-                                     ,uiOutput("train_features")
-                                     ,hr()
-                                     ,checkboxInput(inputId = "override",label = "Check to Override Selected Data ",value = FALSE )
-                                     ,uiOutput("show_upload")
-                                     ,hr()
-                                     ,uiOutput("select_dt_range")
-                                     ,hr()
-                                     ,radioButtons(inputId = "assign_method",label = "Choose Method to Assign Clusters:",choices = c("Classification Tree","Average Distance"))
-                                     ,actionButton(inputId = "do_assign",label = "Assign Clusters To New Season Data")
-                                     ,checkboxInput(inputId = "add_plot",label ="Show Additional Plots", value = FALSE)
-                                     ,hr()
-                                     ,downloadButton(outputId ="download_ass" ,label = "Download New Cluster Assignments CSV")
-                                    )
                               )
                  ,mainPanel(
                    tabsetPanel(
-                     tabPanel("Cluster Profiling", value = 1
-                             ,h3("Cluster Distribution Over Time", align = "center")
-                             ,highchartOutput("stacked_plot")
-                             ,hr()
-                             ,h3("Cluster Averages", align = "center")
+                     tabPanel("Profiling Averages", value = 1
+                             ,h3("Polar Char of Cluster Averages", align = "center")
                              ,uiOutput("hidden_hist")
                              )
-                     ,tabPanel("Assign Clusters to Orders", value = 3
-                               ,h3(strong("Assigned Cluster Distribution Over Time"), align = "center")
-                               ,highchartOutput("stacked_plot2")
-                               ,hr()
-                               ,uiOutput("show_assign_plots")
-                              )
+                     ,tabPanel("Profiling Over Time", value = 2
+                              ,h3("Cluster Distribution Over Time", align = "center")
+                              ,highchartOutput("stacked_plot")
+                     )
+                     ,tabPanel("Profiling Across Features", value = 3
+                               ,h3("Parallel Coordinates Plot over features", align = "center")
+                               ,parcoordsOutput("parcoor", height = 480)
+                     )
                      ,id = "tab_selected"
                      )
                    )
@@ -134,5 +111,43 @@ shinyUI(
             )
       )
     )
+    ,tabPanel("Apply Clusters Results to New Data"
+              ,fluidPage(
+                 tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "../css/custom.css"))
+                 ,theme = shinytheme("flatly")
+                 ,sidebarLayout(
+                   sidebarPanel(
+                     conditionalPanel(condition = "input.tab_selected3 == 4"
+                                       ,h4(strong("Root Cause Clusters were defined on:"))
+                                       ,uiOutput("train_data")
+                                       ,uiOutput("train_features")
+                                       ,hr()
+                                       ,checkboxInput(inputId = "override",label = "Check to Override Selected Data ",value = FALSE )
+                                       ,uiOutput("show_upload")
+                                       ,hr()
+                                       ,uiOutput("select_dt_range")
+                                       ,hr()
+                                       ,radioButtons(inputId = "assign_method",label = "Choose Method to Assign Clusters:",choices = c("Classification Tree","Average Distance"))
+                                       ,actionButton(inputId = "do_assign",label = "Assign Clusters To New Season Data")
+                                       ,checkboxInput(inputId = "add_plot",label ="Show Additional Plots", value = FALSE)
+                                       ,hr()
+                                       ,downloadButton(outputId ="download_ass" ,label = "Download New Cluster Assignments CSV")
+                     )
+                   )
+                   ,mainPanel(
+                     tabsetPanel(
+                       tabPanel("Assign Clusters to Orders", value = 4
+                                 ,h3(strong("Assigned Cluster Distribution Over Time"), align = "center")
+                                 ,highchartOutput("stacked_plot2")
+                                 ,hr()
+                                 ,uiOutput("show_assign_plots")
+                       )
+                       ,id = "tab_selected3"
+                     )
+                   )
+                 )
+               )
+    )
+
   )
 )

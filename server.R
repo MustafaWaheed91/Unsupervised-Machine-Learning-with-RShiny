@@ -226,9 +226,9 @@ shinyServer(
     output$hidden_hist <- renderUI({
       input$show_hist
       if(input$show_hist == TRUE ){
-        return(fluidRow(splitLayout(cellWidths = c("50%","50%"),highchartOutput("radar_plot"),highchartOutput("hist_plot_scam"))))
+        return(fluidRow(splitLayout(cellWidths = c("50%","50%"),highchartOutput("radar_plot", height = 500),highchartOutput("hist_plot_scam", height = 500))))
       }else{
-        return(fluidRow(splitLayout(cellWidths = c("100%"),highchartOutput("radar_plot"))))
+        return(fluidRow(splitLayout(cellWidths = c("100%"),highchartOutput("radar_plot", height = 500))))
       }
     })
 
@@ -240,16 +240,20 @@ shinyServer(
 
     output$parcoor <- renderParcoords({
       df <- memberSet()
-      df <- df[ df$`member.c` %in% input$select_radar_clus,]
-      df <- df[,-c(2,2)]
+      df$Cluster <- df$`member.c`
+      df$`member.c` <- NULL
+      df <- df[ df$`Cluster` %in% input$select_radar_clus,]
+      # df <- df[,-c(2,2)]
       plt <- parcoords(df
                        , rownames = F # turn off rownames from the data.frame
                        , brushMode = "2D-strums"
                        , reorderable = T
                        , queue = T
                        , color = list(
-                         colorBy = "member.c"
-                         ,colorScale = htmlwidgets::JS("d3.scale.category10()")
+                         colorBy = "Cluster"
+                         , colorScale  = htmlwidgets::JS(sprintf('d3.scale.ordinal().range(["#96e2de","#6a5fa3","#B44B86","#008685","#a6daff","#FE5432"
+                                                                 ,"#ffc9c9","#570B3A","#4C4281","#d9d9d9","#144e8d","#36D7B7","#b5abe8"])'
+                         ))
                        )
       )
 
@@ -784,6 +788,5 @@ shinyServer(
     #   x <- sea()
     #   selectInput(inputId = "select_season",label = "Select Month:", choices = x, selected = x[1], multiple = T)
     # })
-
   }
 )
