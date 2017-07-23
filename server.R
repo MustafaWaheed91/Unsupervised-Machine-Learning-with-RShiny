@@ -260,6 +260,57 @@ shinyServer(
     })
 
 
+    output$looped_input  <-  renderUI({
+      if(input$show_rename == TRUE){
+        lapply(1:as.numeric(input$hist_tree), function(i) {
+          textInput(paste0('clus_name_',i), paste0('Enter Cluster ',i, " Description"),value = i)
+        })
+      }else{return()}
+    })
+
+
+    newNames <- reactive({
+      res <- lapply(1:as.numeric(input$hist_tree), function(i) input[[paste0('clus_name_', i)]])
+      df <- data.frame(list(member.name = unlist(res), member.c = 1:as.numeric(input$hist_tree) ))
+      df
+    })
+
+    output$download_means <- downloadHandler(
+      filename = function(){
+        as.character( paste("Occupancy Clustering"," ",input$hist_tree," Cluster Averages",'.csv', sep='') )
+      },
+      content = function(file){
+        mns <- means()
+        mns$Group.1 <- as.numeric(mns$Group.1)
+        cc <- merge(x=mns,y =combo(), by.x = "Group.1", by.y = "member.c",all.x = TRUE)
+        cc$cluster <- cc$Group.1
+        cc$Group.1 <- NULL
+        cc$cluster_name <- cc$member.name
+        cc$member.name <- NULL
+        cc <- as.data.frame(cc)
+        write.csv(cc,file,row.names = FALSE)
+
+      }
+    )
+
+
+    output$download_members <- downloadHandler(
+      filename = function(){
+        as.character(paste("Occupancy Clustering","_",input$hist_tree," Cluster Members",'.csv', sep=''))
+      },
+      content = function(file){
+        mns <- tabMembers()
+        mns$member.c <- as.numeric(mns$member.c)
+        cc <- merge(x=mns,y =combo(), by.x = "member.c", by.y = "member.c",all.x = TRUE)
+        cc$cluster <- cc$member.c
+        cc$member.c <- NULL
+        cc$cluster_name <- cc$member.name
+        cc$member.name <- NULL
+        cc$size_of_prize <- NULL
+        cc <- as.data.frame(cc)
+        write.csv(cc,file, row.names = FALSE)
+      }
+    )
 
 
 
@@ -512,8 +563,6 @@ shinyServer(
     #   bb <- cbind(cat,dat,bat)
     #   bb
     # })
-    #
-    #
     #
     # combo <- reactive({
     #   ll <- as.data.frame(prz())
