@@ -1,4 +1,8 @@
 # Unsupervised-Machine-Learning-with-RShiny
+_by Mustafa Waheed_
+
+Appliction Hosted here: https://mustafawaheedapps.shinyapps.io/Unsupervised-Machine-Learning-with-RShiny/
+
 This is an End to End clustering application implemented primarily in R and to a lesser extent javascript (for viz)
 
 Not only do I walk you through a distance based clustering application, the app will allow for catagorization of  
