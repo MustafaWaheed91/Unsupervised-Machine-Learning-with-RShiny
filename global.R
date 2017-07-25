@@ -6,9 +6,10 @@
 ################################################################################################
 rm(list = ls())
 source(file ="loadPackages.R")
-sample_data <- read.csv("datatraining.txt", sep = ",", stringsAsFactors = F)
+sample_data <- read.csv("datatraining.csv", stringsAsFactors = F)
+# sample_data <- read.csv("datatraining.txt", sep = ",", stringsAsFactors = F)
+# write_data <- sample_data[order(runif(nrow(sample_data))),]
 sample_data$date <- as.Date(sample_data$date)
-
 co <- c("#96e2de","#6a5fa3","#B44B86","#008685","#a6daff","#FE5432","#ffc9c9","#570B3A","#4C4281","#d9d9d9","#144e8d","#36D7B7","#b5abe8")
 cco <- "#36D7B7"
 # # This function takes the firs till cutoff cols and creates a key from them assuming
