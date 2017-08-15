@@ -10,7 +10,7 @@ these clusters and for new data of the *same format* to be uploaded and predicte
 profiled clusters.
 
 
-![Cluster Visualization](clus_viz.png)
+![Cluster Viz](clus_viz.png)
 
 
 Please Note that you would need the following on you machine:
