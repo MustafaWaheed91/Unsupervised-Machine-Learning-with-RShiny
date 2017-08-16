@@ -14,7 +14,22 @@ shinyServer(
     output$heat <- renderPlotly({
       input$do_corr
       if(input$do_corr == 0){
-        return()
+        ################ This is the only place I need to add data for this plot
+        df1 <- sample_data1()
+        df1 <- df1[,order(colnames(df1))]
+        correlation <- round(cor(df1),2)
+        nms <- names(df1)
+        #########################################################
+        f2 <- list(family = "Old Standard TT, serif",size = 6,color = "lightgrey")
+        a <- list(title = "",showticklabels = TRUE,tickangle = 85,tickfont = f2,exponentformat = "E")
+        m <- list(l = 180,b = 80)
+        plot_ly(x = nms, y = nms, z = correlation
+                ,zmax = 1 ,zmin = -1
+                ,colors = colorRamp(c("#FE5432","#36D7B7","#FE5432"))
+                ,key = correlation
+                , type = "heatmap", source = "CORR_MATRIX") %>%
+          layout(xaxis = list(title = ""),
+                 yaxis = list(title = ""),margin = m)
       } else{
         isolate({
           ################ This is the only place I need to add data for this plot
