@@ -92,7 +92,7 @@ shinyUI(
                  ,mainPanel(
                    tabsetPanel(
                      tabPanel("Profiling Averages", value = 1
-                             ,h3("Polar Char of Cluster Averages", align = "center")
+                             ,h3("Radar Chart of Cluster Averages", align = "center")
                              ,uiOutput("hidden_hist")
                              )
                      ,tabPanel("Profiling Over Time", value = 2
